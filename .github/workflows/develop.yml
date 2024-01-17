@@ -1,8 +1,8 @@
-name: Tests backend
+name: Tests and deploy
 
 on:
-  push:
-    branches: [ "backDev" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
   build-backend-images:
@@ -23,7 +23,7 @@ jobs:
       - name: Push Mysql image
         run: echo "Pushing MySQL image"
 
-  tests:
+  tests-backend:
     needs: [build-backend-images, build-mysql]
     runs-on: ubuntu-latest
     steps:
@@ -41,10 +41,34 @@ jobs:
         run: echo "php artisan test"
 
   remove-images:
-    needs: [ tests ]
+    needs: [ tests-backend ]
     runs-on: ubuntu-latest
     if: ${{ always() && contains(needs.*.result, 'failure') }}
     steps:
       - uses: actions/checkout@v3
       - name: Remove images
         run: echo "algo falló, eliminar imágenes"
+
+  build-nginx:
+    needs: [ tests-backend ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build nginx image
+        run: echo "Building nginx image"
+
+  build-proxy:
+    needs: [ tests-backend ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build proxy image
+        run: echo "Building proxy image"
+
+  build-frontend:
+    needs: [ tests-backend ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build frontend image
+        run: echo "building frontend image"
