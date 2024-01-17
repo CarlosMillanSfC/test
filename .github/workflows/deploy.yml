@@ -23,7 +23,7 @@ jobs:
       - name: Push Mysql image
         run: echo "Pushing MySQL image"
 
-  analyze:
+  tests:
     needs: [build-backend-images, build-mysql]
     runs-on: ubuntu-latest
     steps:
@@ -37,21 +37,11 @@ jobs:
         run: echo "phpstan"
       - name: Run phpinsights
         run: echo "phpinsights"
-
-  test:
-    needs: [ build-backend-images, build-mysql ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Pull API image
-        run: echo "Pulling API image"
-      - name: Pull MySQL image
-        run: echo "Pulling MySQL image"
       - name: Run tests
         run: echo "php artisan test"
 
   remove-images:
-    needs: [ analyze, test ]
+    needs: [ tests ]
     runs-on: ubuntu-latest
     if: ${{ always() && contains(needs.*.result, 'failure') }}
     steps:
@@ -60,7 +50,7 @@ jobs:
         run: echo "algo falló, eliminar imágenes"
 
   build-nginx:
-    needs: [ analyze, test ]
+    needs: [ tests ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -68,7 +58,7 @@ jobs:
         run: echo "Building nginx image"
 
   build-proxy:
-    needs: [ analyze, test ]
+    needs: [ tests ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -76,7 +66,7 @@ jobs:
         run: echo "Building proxy image"
 
   build-frontend:
-    needs: [ analyze, test ]
+    needs: [ tests ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
