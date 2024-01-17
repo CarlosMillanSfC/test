@@ -1,0 +1,92 @@
+name: Tests and deploy
+
+on:
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build-backend-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build images
+        run: echo "Building backend images"
+      - name: Push images
+        run: echo "Pushing backend images"
+
+  build-mysql:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build MySQL image
+        run: echo "Building MySQL image"
+      - name: Push Mysql image
+        run: echo "Pushing MySQL image"
+
+  analyze:
+    needs: [build-backend-images, build-mysql]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Pull API image
+        run: echo "Pulling API image"
+      - name: Pull MySQL image
+        run: echo "Pulling MySQL image"
+      - name: Run phpstan
+        # run: docker run --rm -t $API_IMAGE ./vendor/bin/phpstan analyze --memory-limit=1G
+        run: echo "phpstan"
+      - name: Run phpinsights
+        run: echo "phpinsights"
+
+  test:
+    needs: [ build-backend-images, build-mysql ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Pull API image
+        run: echo "Pulling API image"
+      - name: Pull MySQL image
+        run: echo "Pulling MySQL image"
+      - name: Run tests
+        run: echo "php artisan test"
+
+  remove-images:
+    needs: [ analyze, test ]
+    runs-on: ubuntu-latest
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Remove images
+        run: echo "algo falló, eliminar imágenes"
+
+  build-nginx:
+    needs: [ analyze, test ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build nginx image
+        run: echo "Building nginx image"
+
+  build-proxy:
+    needs: [ analyze, test ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build proxy image
+        run: echo "Building proxy image"
+
+  build-frontend:
+    needs: [ analyze, test ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build frontend image
+        run: echo "building frontend image"
+
+  deploy-prod:
+    needs: [ build-frontend, build-nginx, build-proxy ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy app
+        run: echo "Deploying app"
