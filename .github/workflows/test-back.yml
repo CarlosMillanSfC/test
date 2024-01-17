@@ -1,0 +1,50 @@
+name: Test backend
+
+on:
+  push:
+    branches: [ "backDev" ]
+
+jobs:
+  build-backend-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build images
+        run: echo "Building backend images"
+      - name: Push images
+        run: echo "Pushing backend images"
+
+  build-mysql:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build MySQL image
+        run: echo "Building MySQL image"
+      - name: Push Mysql image
+        run: echo "Pushing MySQL image"
+
+  tests:
+    needs: [build-backend-images, build-mysql]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Pull API image
+        run: echo "Pulling API image"
+      - name: Pull MySQL image
+        run: echo "Pulling MySQL image"
+      - name: Run phpstan
+        # run: docker run --rm -t $API_IMAGE ./vendor/bin/phpstan analyze --memory-limit=1G
+        run: echo "phpstan"
+      - name: Run phpinsights
+        run: echo "phpinsights"
+      - name: Run tests
+        run: echo "php artisan test"
+
+  remove-images:
+    needs: [ tests ]
+    runs-on: ubuntu-latest
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Remove images
+        run: echo "algo falló, eliminar imágenes"
